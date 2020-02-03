@@ -1,0 +1,69 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://nic.cz/schema/json-forms-encoding",
+    "title": "Form description",
+    "description": "Description of form used for generating forms by JSON and its rendering by this description.",
+    "type": "object",
+    "properties": {
+        "form_errors": {
+            "type": "array",
+            "description": "Errors related to the whole form.",
+            "items": {
+                "type": "string"
+            }
+        },
+        "fields": {
+            "type": "array",
+            "description": "Array of fields which are in the form.",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Name of field."
+                    },
+                    "label": {
+                        "type": "string",
+                        "description": "Label for field showed with representation of widget."
+                    },
+                    "help_text": {
+                        "type": "string",
+                        "description": "Help text (in Django) respectively hint text in Vuetify for field."
+                    },
+                    "value": {
+                        "type": ["string", "boolean", "null"],
+                        "description": "Value for field, currently optinal where type is string or boolean (more restrictively) but in future can be changed for multipurpose type."
+                    },
+                    "required": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Flag if value of field is required for sending form."
+                    },
+                    "widget": {
+                        "type": "object",
+                        "description": "Information about widget used for the field.",
+                        "properties": {
+                            "name": {
+                                "type": "string",
+                                "description": "Mapping name for some UI component. This property declares rendering style of field (eg. 'input' or 'textarea')."
+                            },
+                            "type": {
+                                "type": "string",
+                                "description": "Additional information for widget type (eg. 'text' or 'checkbox')."
+                            }
+                        },
+                        "required": ["name"]
+                    },
+                    "errors": {
+                        "type": "array",
+                        "description": "Errors related to the field.",
+                        "items": {
+                            "type":"string"
+                        }
+                    }
+                },
+                "required": ["name", "label", "widget"]
+            }
+        }
+    }
+}
