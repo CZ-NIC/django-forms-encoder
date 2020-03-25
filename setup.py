@@ -14,7 +14,7 @@ def readme():
 
 INSTALL_REQUIRES = open('requirements.txt').read().splitlines()
 EXTRAS_REQUIRE = {'quality': ['isort', 'flake8', 'pydocstyle', 'mypy']}
-VERSION = '0.1.0'
+VERSION = '0.2'
 
 
 setup(name='django_forms_encoder',
