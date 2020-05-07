@@ -5,6 +5,7 @@ from django import forms
 from django.test import SimpleTestCase
 
 from django_forms_encoder import DjangoFormsEncoder
+from django_forms_encoder.encoder import form_to_dict
 
 
 class TestDjangoFormsEncoder(SimpleTestCase):
@@ -17,12 +18,26 @@ class TestDjangoFormsEncoder(SimpleTestCase):
             '"2020-01-01T00:00:00"'
         )
 
+    def test_form(self):
+        class TestForm(forms.Form):
+            username = forms.CharField()
+            password = forms.CharField()
+
+        self.assertEqual(
+            json.loads(json.dumps(TestForm(), cls=DjangoFormsEncoder)),
+            form_to_dict(TestForm()),
+        )
+
+
+class TestFormToDict(SimpleTestCase):
+    """Test form_to_dict function."""
+
     def test_field_name(self):
         class TestForm(forms.Form):
             username = forms.CharField()
             password = forms.CharField()
 
-        form = json.loads(json.dumps(TestForm(), cls=DjangoFormsEncoder))
+        form = form_to_dict(TestForm())
         self.assertEqual(form['fields'][0]['name'], 'username')
         self.assertEqual(form['fields'][1]['name'], 'password')
 
@@ -31,7 +46,7 @@ class TestDjangoFormsEncoder(SimpleTestCase):
             username = forms.CharField(label='Name of the user')
             password = forms.CharField()
 
-        form = json.loads(json.dumps(TestForm(), cls=DjangoFormsEncoder))
+        form = form_to_dict(TestForm())
         self.assertEqual(form['fields'][0]['label'], 'Name of the user')
         self.assertEqual(form['fields'][1]['label'], 'password')
 
@@ -40,7 +55,7 @@ class TestDjangoFormsEncoder(SimpleTestCase):
             username = forms.CharField(required=True)
             password = forms.CharField(required=False)
 
-        form = json.loads(json.dumps(TestForm(), cls=DjangoFormsEncoder))
+        form = form_to_dict(TestForm())
         self.assertEqual(form['fields'][0]['required'], True)
         self.assertEqual(form['fields'][1]['required'], False)
 
@@ -49,7 +64,7 @@ class TestDjangoFormsEncoder(SimpleTestCase):
             username = forms.CharField(help_text='Must be unique')
             password = forms.CharField()
 
-        form = json.loads(json.dumps(TestForm(), cls=DjangoFormsEncoder))
+        form = form_to_dict(TestForm())
         self.assertEqual(form['fields'][0]['help_text'], 'Must be unique')
         self.assertNotIn('help_text', form['fields'][1])
 
@@ -60,7 +75,7 @@ class TestDjangoFormsEncoder(SimpleTestCase):
             description = forms.CharField(widget=forms.Textarea)
             is_admin = forms.BooleanField()
 
-        form = json.loads(json.dumps(TestForm(), cls=DjangoFormsEncoder))
+        form = form_to_dict(TestForm())
         self.assertEqual(form['fields'][0]['widget'], {'name': 'input', 'type': 'text'})
         self.assertEqual(form['fields'][1]['widget'], {'name': 'input', 'type': 'password'})
         self.assertEqual(form['fields'][2]['widget'], {'name': 'textarea'})
@@ -74,7 +89,7 @@ class TestDjangoFormsEncoder(SimpleTestCase):
             username = forms.CharField(widget=UnknownWidget)
 
         with self.assertRaisesRegex(TypeError, 'Widget of type .*UnknownWidget.* is not JSON serializable'):
-            json.dumps(TestForm(), cls=DjangoFormsEncoder)
+            form_to_dict(TestForm())
 
     def test_field_errors(self):
         class TestForm(forms.Form):
@@ -86,7 +101,7 @@ class TestDjangoFormsEncoder(SimpleTestCase):
                 self.add_error('username', 'Must be a name.')
                 self.add_error('password', 'Must not be empty.')
 
-        form = json.loads(json.dumps(TestForm(data={}), cls=DjangoFormsEncoder))
+        form = form_to_dict(TestForm(data={}))
         self.assertEqual(form['fields'][0]['errors'], ['This field is required.', 'Must be a name.'])
         self.assertEqual(form['fields'][1]['errors'], ['Must not be empty.'])
         self.assertNotIn('errors', form['fields'][2])
@@ -99,7 +114,7 @@ class TestDjangoFormsEncoder(SimpleTestCase):
                 self.add_error(None, 'My hovercraft is full of eels!')
                 self.add_error(None, 'Keep it simple!')
 
-        form = json.loads(json.dumps(TestForm(data={}), cls=DjangoFormsEncoder))
+        form = form_to_dict(TestForm(data={}))
         self.assertEqual(form['form_errors'], ['My hovercraft is full of eels!', 'Keep it simple!'])
 
     def test_field_value(self):
@@ -110,6 +125,6 @@ class TestDjangoFormsEncoder(SimpleTestCase):
         form_obj = TestForm(data={'username': 'admin', 'age': 42})
         self.assertTrue(form_obj.is_valid())
 
-        form = json.loads(json.dumps(form_obj, cls=DjangoFormsEncoder))
+        form = form_to_dict(form_obj)
         self.assertEqual(form['fields'][0]['value'], 'admin')
         self.assertEqual(form['fields'][1]['value'], 42)
